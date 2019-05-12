@@ -45,6 +45,12 @@ def detect_img(yolo):
 
         while True:
             data = conn.recv(1024)
+
+            if( data.decode() == 'exit' ):      # 關閉連接
+                print("close connect...")
+                conn.close()
+                break
+
             pic_name = data.decode()
 
             infile = inDir+pic_name
@@ -53,7 +59,7 @@ def detect_img(yolo):
             print('Open file...' + infile )
             try:
                 image = Image.open( infile )
-                r_image = yolo.detect_image(image)
+                r_image , targets = yolo.detect_image(image)
     
                 print('Save image... '+ outfile  )
                 r_image.save( outfile )
@@ -68,14 +74,19 @@ def detect_img(yolo):
                     conn.close()
                     break;
 
+
+            data = "data stream\n"
+            if len(targets)>0:
+                for row in targets:
+                    data += ','.join( row )
+                    data += '\n'
+            conn.send( data.encode('utf-8') )
+
+            print( 'send data...\n' + data  )
             print('-------------------')
             print()
-            conn.send('finish'.encode('utf-8'))
     
-            if( data.decode() == 'exit' ):      # 關閉連接
-                print("close connect...")
-                conn.close()
-
+    s.close()
     yolo.close_session()      
 
     FLAGS = None

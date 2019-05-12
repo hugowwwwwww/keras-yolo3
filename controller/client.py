@@ -41,7 +41,12 @@ while(True):
     
     s.send( file_name.encode('utf-8') )
 
+    print(123)
+
     data = s.recv(1024) # 等待
+
+    print(234)
+    print(data.decode())
 
 
 

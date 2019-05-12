@@ -130,12 +130,18 @@ class YOLO(object):
                     size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         thickness = (image.size[0] + image.size[1]) // 300
 
+        targets = []
         for i, c in reversed(list(enumerate(out_classes))):
             predicted_class = self.class_names[c]
             box = out_boxes[i]
             score = out_scores[i]
 
+            tmp = []
+
             label = '{} {:.2f}'.format(predicted_class, score)
+            tmp.append(predicted_class)
+            tmp.append(score)
+
             draw = ImageDraw.Draw(image)
             label_size = draw.textsize(label, font)
 
@@ -145,6 +151,14 @@ class YOLO(object):
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
             print(label, (left, top), (right, bottom))
+            tmp.append(left)
+            tmp.append(top)
+            tmp.append(right)
+            tmp.append(bottom)
+
+            tmp = list(map( str , tmp ))
+
+            targets.append( tmp )
 
             if top - label_size[1] >= 0:
                 text_origin = np.array([left, top - label_size[1]])
@@ -163,8 +177,8 @@ class YOLO(object):
             del draw
 
         end = timer()
-        print(end - start)
-        return image
+        print( end - start )
+        return image , targets
 
     def close_session(self):
         self.sess.close()
