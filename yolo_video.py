@@ -53,8 +53,22 @@ def detect_img(yolo):
 
             pic_name = data.decode()
 
+            conn.send('ready'.encode('utf-8'))
+
             infile = inDir+pic_name
             outfile = outDir+pic_name
+
+            if infile == inDir:
+                break
+
+            with open(infile,"ab") as f:
+                while True:
+                    data = conn.recv(1024)
+                    if not data:
+                        break;
+                    f.write(data)
+
+            conn,addr = s.accept()  # 建立與客戶端的連接
 
             print('Open file...' + infile )
             try:
