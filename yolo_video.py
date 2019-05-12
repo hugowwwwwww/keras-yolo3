@@ -41,32 +41,40 @@ def detect_img(yolo):
         inDir = './controller/image/'
         outDir = './controller/outimage/'
 
-        data = conn.recv(1024)
-        pic_name = data.decode()
+        cc = 0
 
-        infile = inDir+pic_name
-        outfile = outDir+pic_name
+        while True:
+            data = conn.recv(1024)
+            pic_name = data.decode()
 
-        print('Open file...' + infile )
-        try:
-            image = Image.open( infile )
-            r_image = yolo.detect_image(image)
+            infile = inDir+pic_name
+            outfile = outDir+pic_name
 
-            print('Save image... '+ outfile  )
-            r_image.save( outfile )
+            print('Open file...' + infile )
+            try:
+                image = Image.open( infile )
+                r_image = yolo.detect_image(image)
+    
+                print('Save image... '+ outfile  )
+                r_image.save( outfile )
+    
+            except:
+                cc += 1
+                print('Open Error! Try again!')
+                if cc < 5:
+                    continue
+                else:
+                    print("close connect...")
+                    conn.close()
+                    break;
 
-        except:
-            print('Open Error! Try again!')
-            continue
-
-        msg = "hello"+ str(addr)
-        conn.send( msg.encode('utf-8') )
-
-        print('recive:' , data.decode() )
-
-        if( data.decode() == 'exit' ):      # 關閉連接
-            print("close connect...")
-            conn.close()
+            print('-------------------')
+            print()
+            conn.send('finish'.encode('utf-8'))
+    
+            if( data.decode() == 'exit' ):      # 關閉連接
+                print("close connect...")
+                conn.close()
 
     yolo.close_session()      
 
