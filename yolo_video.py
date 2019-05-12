@@ -4,6 +4,9 @@ from yolo import YOLO, detect_video
 from PIL import Image
 import cv2
 import os
+import socket
+
+
 '''
 def detect_img(yolo):
     while True:
@@ -20,6 +23,30 @@ def detect_img(yolo):
     yolo.close_session()
 '''
 def detect_img(yolo):
+
+    # 與 run.bat 的 Port 同步，要出去 docker 的 Port
+
+    Port = 9006                 # 設定的 Port ，與 run.bat 同步
+
+    s = socket.socket()         # 建立 socket 物件
+    host = socket.gethostname() # 獲得電腦主機名稱
+    s.bind((host, Port))        # 監聽 9006 Port
+     
+    s.listen(3)                 # 開始監聽，並設置最大監聽數量
+    print( "Waiting ..." )
+    while True: 
+        conn,addr = s.accept()  # 建立與客戶端的連接
+        print( "connected from " + str(addr) )
+
+        msg = "hello"+ str(addr)
+        conn.send( msg.encode('utf-8')    )
+
+        data = conn.recv(1024)
+        print('recive:' , data.decode() )
+        
+        conn.close()                # 關閉連接
+
+'''
     pic='./car20190304'
     goal_dir='./predict_new_2019'
     files=os.listdir(pic)
@@ -35,8 +62,8 @@ def detect_img(yolo):
             r_image.save(goal_dir+'/'+file)
     yolo.close_session()      
 
-FLAGS = None
-
+    FLAGS = None
+'''
 if __name__ == '__main__':
     # class YOLO defines the default value, so suppress any default here
     parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
