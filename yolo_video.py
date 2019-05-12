@@ -2,7 +2,9 @@ import sys
 import argparse
 from yolo import YOLO, detect_video
 from PIL import Image
-
+import cv2
+import os
+'''
 def detect_img(yolo):
     while True:
         img = input('Input image filename:')
@@ -14,7 +16,24 @@ def detect_img(yolo):
         else:
             r_image = yolo.detect_image(image)
             r_image.show()
+            r_image.save('./image1227/new516.jpg')
     yolo.close_session()
+'''
+def detect_img(yolo):
+    pic='./car20190304'
+    goal_dir='./predict_new_2019'
+    files=os.listdir(pic)
+    for file in files:
+        try:
+            image = Image.open(pic+'/'+file)
+        except:
+            print('Open Error! Try again!')
+            continue
+        else:
+            r_image = yolo.detect_image(image)
+            r_image.show()
+            r_image.save(goal_dir+'/'+file)
+    yolo.close_session()      
 
 FLAGS = None
 
