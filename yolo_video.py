@@ -75,11 +75,11 @@ def detect_img(yolo):
                     break;
 
 
-            data = "data stream\n"
+            data = "data stream"
             if len(targets)>0:
                 for row in targets:
+                    data += '\n'                    
                     data += ','.join( row )
-                    data += '\n'
             conn.send( data.encode('utf-8') )
 
             print( 'send data...\n' + data  )
