@@ -38,32 +38,32 @@ def detect_img(yolo):
         conn,addr = s.accept()  # 建立與客戶端的連接
         print( "connected from " + str(addr) )
 
-        msg = "hello"+ str(addr)
-        conn.send( msg.encode('utf-8')    )
 
         data = conn.recv(1024)
-        print('recive:' , data.decode() )
-        
-        conn.close()                # 關閉連接
+        pic_path = data.decode()
 
-'''
-    pic='./car20190304'
-    goal_dir='./predict_new_2019'
-    files=os.listdir(pic)
-    for file in files:
         try:
-            image = Image.open(pic+'/'+file)
+            image = Image.open(pic_path)
+            print('Open file...' + pic_path)
+            r_image = yolo.detect_image(image)
+
         except:
             print('Open Error! Try again!')
             continue
-        else:
-            r_image = yolo.detect_image(image)
-            r_image.show()
-            r_image.save(goal_dir+'/'+file)
+
+        msg = "hello"+ str(addr)
+        conn.send( msg.encode('utf-8')    )
+
+        print('recive:' , data.decode() )
+
+        if( data.decode() == 'exit' ):      # 關閉連接
+            print("close connect...")
+            conn.close()
+            
     yolo.close_session()      
 
     FLAGS = None
-'''
+
 if __name__ == '__main__':
     # class YOLO defines the default value, so suppress any default here
     parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
