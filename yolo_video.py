@@ -38,28 +38,36 @@ def detect_img(yolo):
         conn,addr = s.accept()  # 建立與客戶端的連接
         print( "connected from " + str(addr) )
 
+        inDir = './controller/image/'
+        outDir = './controller/outimage/'
 
         data = conn.recv(1024)
-        pic_path = data.decode()
+        pic_name = data.decode()
 
+        infile = inDir+pic_name
+        outfile = outDir+pic_name
+
+        print('Open file...' + infile )
         try:
-            image = Image.open(pic_path)
-            print('Open file...' + pic_path)
+            image = Image.open( infile )
             r_image = yolo.detect_image(image)
+
+            print('Save image... '+ outfile  )
+            r_image.save( outfile )
 
         except:
             print('Open Error! Try again!')
             continue
 
         msg = "hello"+ str(addr)
-        conn.send( msg.encode('utf-8')    )
+        conn.send( msg.encode('utf-8') )
 
         print('recive:' , data.decode() )
 
         if( data.decode() == 'exit' ):      # 關閉連接
             print("close connect...")
             conn.close()
-            
+
     yolo.close_session()      
 
     FLAGS = None
