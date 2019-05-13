@@ -61,7 +61,7 @@ def detect_img(yolo):
             if infile == inDir:
                 break
 
-            with open(infile,"ab") as f:
+            with open(infile,"wb") as f:
                 while True:
                     data = conn.recv(1024)
                     if not data:
