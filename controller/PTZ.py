@@ -89,6 +89,12 @@ class PTZ:
                     print(  k  , '\n\t' , d[k].__doc__ )
 
     class Controller:
+
+        # 是否定位
+        _isPosFinish = True
+        _isZoomFinsih = True
+        _previousCommand = ''
+
         def __init__( self , ZOOOOM=0 , YYYY=0 , ZZZZ=0 , Port="COM3" , BaudRate=9600 ):
             """設定控制底座的初始狀況，並連接控制底座，不要用手轉控制底座！！ """
             # ZOOOOM: 聚焦程度 [0,65535]
@@ -106,8 +112,8 @@ class PTZ:
 
             # 極限範圍
             self.ZOlimit = [ 0 , 65535 ]
+            self.Ylimit = [ -1600 , 1600 ]
             self.Zlimit = [ -380 , 1180 ]
-            self.Ylimit = [ -800 , 800 ]
 
             # 當前轉向 (順或逆) (1,-1)
             self.Yclockwise = 1
@@ -169,6 +175,7 @@ class PTZ:
             command = bytes.fromhex( command )
 
             self.controller.write( command )
+            self._previousCommand = command
             return True
 
 
@@ -179,9 +186,14 @@ class PTZ:
                 return False
             if self.ZZZZ + d > self.Zlimit[1]:
                 return False
+
+            # 設定移動中
+            self._isPosFinish = False
             # 移動在範圍內
             self.ZZZZ += d
-            self.controller.write( self._Controller__AP() )
+            command = self._Controller__AP()
+            self.controller.write( command )
+            self._previousCommand = command
             # time.sleep(TimeDelay)
             return True
 
@@ -193,9 +205,13 @@ class PTZ:
             if self.YYYY + d > self.Ylimit[1]:
                 return False
 
+            # 設定移動中
+            self._isPosFinish = False
             # 移動在範圍內
             self.YYYY += d
-            self.controller.write( self._Controller__AP() )
+            command = self._Controller__AP()
+            self.controller.write( command )
+            self._previousCommand = command
             # time.sleep(TimeDelay)
             return True
 
@@ -225,6 +241,69 @@ class PTZ:
             hexStr = '{:0>4}'.format( hexStr )
             return hexStr
 
+        def __toDec( self , byteStr ):
+            """將八位 bytes string (0Y0Y0Y0Y) 轉成 Dec """
+            numArr = [ c for c in byteStr]
+
+            n = 0
+            for i in range(3,-1,-1):
+                n += numArr[i] * (16**i)
+            return n
+
+        def __clearBuffer(self):
+            """清空控制底座回傳的封包 """
+            command = '88010001FF'
+            command = bytes.fromhex( command )
+
+            self.controller.write( command )
+
+            while True:
+                bStr = b''
+                while True:
+                    b = self.controller.read()
+                    bStr += b
+                    if b == b'\xff':
+                        break
+                if bStr == command:
+                    break
+
+        def isFinish( self ):
+           
+            """
+            if not self._isZoomFinsih:
+                pass
+                if ...
+                    self._isZoomFinsih
+            """
+
+            if not self._isPosFinish:
+                # 清空暫存
+                self._Controller__clearBuffer()
+
+                # 寫入查詢指令
+                command = '81090612FF'
+                command = bytes.fromhex( command )
+                self.controller.write( command )
+                
+                # 接收回傳
+                bStr = self.controller.read(11)
+
+                # 轉換成數字
+                Ynum = self._Controller__toDec( bStr[2:6] )
+                Znum = self._Controller__toDec( bStr[7:11] )
+
+                if self.YYYY == Ynum and self.ZZZZ == Znum:
+                    self._isPosFinish = True
+
+                print( Ynum )
+
+            if self._isZoomFinsih and self._isPosFinish:
+                return True
+            else:
+                self.controller.write( self._previousCommand )
+                return False
+
+
 
 if __name__ == '__main__':
     # ca.help()
@@ -232,7 +311,17 @@ if __name__ == '__main__':
     # ca.showVideo()
 
     co = PTZ.Controller()
+
     co.resetPosition()
-    print(co)
+    time.sleep(2)
+    co._Controller__clearBuffer()
+    co.horizontalMove( 1200 )
+
+    while True:
+        flag = co.isFinish()
+        print( flag )
+        if flag:
+            break
+
 
 
